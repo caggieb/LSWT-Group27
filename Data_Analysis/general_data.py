@@ -12,7 +12,7 @@ P_t =  pressure_df['P097']
 P_b =  pressure_df['P_bar']
 
 q_inf = 0.211804 + 1.928442*dP_b + 1.879374 * 10**(-4) * dP_b
-p_stat = P_b - q_inf
+p_stat = P_t - q_inf
 
 print(p_stat)
 
