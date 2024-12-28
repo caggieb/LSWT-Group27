@@ -55,7 +55,6 @@ def lower_taps(alpha):
     return pressure_lower
 
 
-
 # # Create the plot
 # plt.figure(figsize=(10, 6))
 # plt.plot(x_positions_upper, pressure_upper, marker='o', label="Upper Surface")
