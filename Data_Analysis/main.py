@@ -94,13 +94,48 @@ for i in range(len(general['Alpha'])):
     c_d_list.append(c_d)
 
 
+# for i in range(len(general['Alpha'])):
+
+#     p_u = upper_taps(general['Alpha'][i])
+#     p_l = lower_taps(general['Alpha'][i])
+    
+#     p_t_u = np.linspace(0,0, len(p_u))
+#     p_t_l = np.linspace(0,0, len(p_l))
+
+#     for i in range(0,len(p_u)):
+#         p_t_u[i] = p_u.iloc[i]*math.sin(upper_surface_angle(x_u.iloc[i]/(160/1000)))
+
+#     for i in range(0,len(p_l)):
+#         p_t_l[i] = p_l.iloc[i]*math.sin(lower_surface_angle(x_l.iloc[i]/(160/1000)))
+
+
+#     n_star = (trapezoid(p_l,x_l) - trapezoid(p_u,x_u))
+#     a_star = (trapezoid(p_t_u,x_u) - trapezoid(p_t_l,x_l))
+
+#     c_m_le = C_m_le(c_p_u, c_p_l)
+#     c_m_fourth = c_m_le + 0.25 * c_n
+
+#     aoa_rad = math.radians(general['Alpha'][i])
+
+#     l_star = n_star*math.cos(aoa_rad) - a_star*math.sin(aoa_rad)
+#     d_star = a_star*math.cos(aoa_rad) + n_star*math.sin(aoa_rad)
+
+
+
+#     c_n_list.append(c_n)
+#     c_t_list.append(c_t)
+#     c_m_le_list.append(c_m_le)
+#     c_m_fourth_list.append(c_m_fourth)
+#     c_l_list.append(c_l)
+#     c_d_list.append(c_d)
+
 desired_alpha = 6
 
 c_p_u = C_p(desired_alpha)[0]
 c_p_l = C_p(desired_alpha)[1]
 
 
-# #Plotting Cp for a desired alpha
+# #Plotting Cp chordwise for a desired alpha
 # plt.plot(x_u, c_p_u, marker='o', label="Upper Surface")
 # plt.plot(x_l, c_p_l, marker='o', label="Lower Surface")
 # plt.xlabel('Position (x [mm])')
@@ -113,7 +148,7 @@ c_p_l = C_p(desired_alpha)[1]
 
 
 
-# #Plotting Cn over alpha
+# Plotting Coeffs over alpha
 plt.plot(general['Alpha'], c_n_list, label="C_n")
 plt.plot(general['Alpha'], c_t_list, label="C_t")
 #plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
