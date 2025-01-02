@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from scipy.integrate import trapezoid
+from scipy.interpolate import interp1d
 
 from  Wake_Readout import total_wake, static_wake
 from Airfoil_Readout import upper_taps, lower_taps, tap_coords
@@ -20,17 +21,20 @@ upper_surface_angle, lower_surface_angle = create_angle_functions(x_airf_upper, 
 
 general = pd.read_csv('general_data.csv')
 
-x_u = tap_coords()[0]*1.6/1000
-x_l = tap_coords()[1]*1.6/1000
+x_u = tap_coords()[0]/100
+x_l = tap_coords()[1]/100
 
 c_n_list = []
-c_t_list = []
+c_a_list = []
 c_m_le_list = []
 c_m_fourth_list = []
 c_l_list = []
 c_d_list = []
+c_d_w_list = []
+c_d_w_ac_list = []
 
-def C_p(alpha):
+
+def C_p_a(alpha):
 
     desired_alpha = alpha
 
@@ -58,40 +62,119 @@ def C_m_le(c_p_u, c_p_l):
 
     return c_m_l
 
+def C_p_t(alpha):
 
+    c_p_t_list = []
 
+    general_alpha = general[general['Alpha'] == alpha]
+
+    p_stat = general_alpha.iloc[0]['p_stat']
+    q_inf = general_alpha.iloc[0]['q_inf']
+
+    p_t = total_wake(alpha)[0]
+    p_s = static_wake(alpha)[0]
+
+    x_t = total_wake(alpha)[1]
+    x_s = static_wake(alpha)[1]
+
+    p_t_func = interp1d(x_t, p_t, kind='linear', fill_value="extrapolate")
+    p_s_func = interp1d(x_s, p_s, kind='linear', fill_value="extrapolate")
+
+    for i in range(0,len(x_s)):
+        c_p_t_list.append((p_t_func(x_s[i]) - p_s_func(x_s[i]))/q_inf)
+
+    return c_p_t_list, x_s
+
+def C_p_t_func(alpha):
+
+    c_p_t_list = []
+
+    general_alpha = general[general['Alpha'] == alpha]
+
+    p_stat = general_alpha.iloc[0]['p_stat']
+    q_inf = general_alpha.iloc[0]['q_inf']
+
+    p_t = total_wake(alpha)[0]
+    p_s = static_wake(alpha)[0]
+
+    x_t = total_wake(alpha)[1]
+    x_s = static_wake(alpha)[1]
+
+    p_t_func = interp1d(x_t, p_t, kind='linear', fill_value="extrapolate")
+    p_s_func = interp1d(x_s, p_s, kind='linear', fill_value="extrapolate")
+
+    x_s_accurate = np.linspace(x_s[0], x_s[len(x_s)-1], 100)
+
+    for i in range(0,len(x_s_accurate)):
+        c_p_t_list.append((p_t_func(x_s_accurate[i]) - p_s_func(x_s_accurate[i]))/q_inf)
+
+    return c_p_t_list, x_s_accurate
+
+#Surface pressure data
 for i in range(len(general['Alpha'])):
 
-    c_p_u = C_p(general['Alpha'][i])[0]
-    c_p_l = C_p(general['Alpha'][i])[1]
+    c_p_u = C_p_a(general['Alpha'][i])[0]
+    c_p_l = C_p_a(general['Alpha'][i])[1]
     
+
     c_p_t_u = np.linspace(0,0, len(c_p_u))
     c_p_t_l = np.linspace(0,0, len(c_p_l))
 
     for i in range(0,len(c_p_u)):
-        c_p_t_u[i] = c_p_u.iloc[i]*math.sin(upper_surface_angle(x_u.iloc[i]/(160/1000)))
+        #print(x_u.iloc[i])
+        c_p_t_u[i] = c_p_u.iloc[i]*upper_surface_angle(x_u.iloc[i])
 
     for i in range(0,len(c_p_l)):
-        c_p_t_l[i] = c_p_l.iloc[i]*math.sin(lower_surface_angle(x_l.iloc[i]/(160/1000)))
+        c_p_t_l[i] = c_p_l.iloc[i]*lower_surface_angle(x_l.iloc[i])
 
 
-    c_n = (trapezoid(c_p_l,x_l) - trapezoid(c_p_u,x_u))/0.160
-    c_t = (trapezoid(c_p_t_u,x_u) - trapezoid(c_p_t_l,x_l))/0.160
+    c_n = (trapezoid(c_p_l,x_l) - trapezoid(c_p_u,x_u))
+    c_a = (trapezoid(c_p_t_u,x_u) - trapezoid(c_p_t_l,x_l))
 
     c_m_le = C_m_le(c_p_u, c_p_l)
     c_m_fourth = c_m_le + 0.25 * c_n
 
     aoa_rad = math.radians(general['Alpha'][i])
 
-    c_l = c_n*math.cos(aoa_rad) - c_t*math.sin(aoa_rad)
-    c_d = c_t*math.cos(aoa_rad) + c_n*math.sin(aoa_rad)
+    c_l = c_n*math.cos(aoa_rad) - c_a*math.sin(aoa_rad)
+    c_d = - c_a*math.cos(aoa_rad) + c_n*math.sin(aoa_rad)
 
     c_n_list.append(c_n)
-    c_t_list.append(c_t)
+    c_a_list.append(-c_a)
     c_m_le_list.append(c_m_le)
     c_m_fourth_list.append(c_m_fourth)
     c_l_list.append(c_l)
     c_d_list.append(c_d)
+
+#Wake rake data
+for i in range(len(general['Alpha'])):
+    c_p_t, x_s = C_p_t(general['Alpha'][i])
+
+    c_p_t_ac, x_s_ac = C_p_t_func(general['Alpha'][i])
+
+    #if i % 8 == 0:
+        #plt.plot(x_s_ac, c_p_t_ac, label= f"c_p_t at {general['Alpha'][i]} deg")
+
+    
+    sqrt_c_p_t = np.linspace(0,0,len(c_p_t))
+
+    sqrt_c_p_t_ac = np.linspace(0,0,len(c_p_t_ac))
+
+
+    for i in range(0,len(c_p_t)):
+        sqrt_c_p_t[i] = math.sqrt(c_p_t[i])
+
+    for i in range(0,len(c_p_t_ac)):
+        sqrt_c_p_t_ac[i] = math.sqrt(c_p_t_ac[i])
+
+
+    c_d = -trapezoid(((sqrt_c_p_t)*(1-sqrt_c_p_t)), x_s)*2/160
+
+    c_d_ac = trapezoid(((sqrt_c_p_t_ac)*(1-sqrt_c_p_t_ac)), x_s_ac)*2/160
+
+    c_d_w_list.append(c_d)
+
+    c_d_w_ac_list.append(c_d_ac)
 
 
 # for i in range(len(general['Alpha'])):
@@ -123,17 +206,21 @@ for i in range(len(general['Alpha'])):
 
 
 #     c_n_list.append(c_n)
-#     c_t_list.append(c_t)
+#     c_a_list.append(c_a)
 #     c_m_le_list.append(c_m_le)
 #     c_m_fourth_list.append(c_m_fourth)
 #     c_l_list.append(c_l)
 #     c_d_list.append(c_d)
 
-desired_alpha = 6
+desired_alpha = 8
 
-c_p_u = C_p(desired_alpha)[0]
-c_p_l = C_p(desired_alpha)[1]
+c_p_u = C_p_a(desired_alpha)[0]
+c_p_l = C_p_a(desired_alpha)[1]
 
+c_p_t, x_s = C_p_t(desired_alpha)
+
+# plt.plot(x_s,c_p_t)
+# plt.show
 
 # #Plotting Cp chordwise for a desired alpha
 # plt.plot(x_u, c_p_u, marker='o', label="Upper Surface")
@@ -149,14 +236,15 @@ c_p_l = C_p(desired_alpha)[1]
 
 
 # Plotting Coeffs over alpha
-plt.plot(general['Alpha'], c_n_list, label="C_n")
-plt.plot(general['Alpha'], c_t_list, label="C_t")
+#plt.plot(general['Alpha'], c_n_list, label="C_n")
+#plt.plot(general['Alpha'], c_a_list, label="c_a")
 #plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
 #plt.plot(general['Alpha'], c_m_fourth_list, label="C_m_c/4")
 #plt.plot(general['Alpha'], c_l_list, label="C_l")
-plt.plot(general['Alpha'], c_d_list, label="C_d")
-plt.xlabel('coeff')
-plt.ylabel('alpha')
+#plt.plot(general['Alpha'], c_d_list, label="C_d(fake)")
+plt.plot(general['Alpha'], c_d_w_ac_list, label="C_d(wake)")
+plt.xlabel('alpha')
+plt.ylabel('coeff')
 plt.legend()
 plt.grid(True)
 plt.show()

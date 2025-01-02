@@ -66,18 +66,18 @@ def plot_airfoil_with_angles(x_upper, y_upper, x_lower, y_lower, upper_angle_fun
 # Function to calculate angles of upper and lower surfaces
 def calculate_surface_angles(x_upper, y_upper, x_lower, y_lower):
     # Interpolate the surfaces
-    upper_interp = interp1d(x_upper, y_upper, kind='cubic', fill_value="extrapolate")
-    lower_interp = interp1d(x_lower, y_lower, kind='cubic', fill_value="extrapolate")
+    upper_interp = interp1d(x_upper, y_upper, kind='linear', fill_value="extrapolate")
+    lower_interp = interp1d(x_lower, y_lower, kind='linear', fill_value="extrapolate")
 
     def upper_angle(x):
         dy_dx = np.gradient(upper_interp(np.array([x - 1e-5, x, x + 1e-5]))) / np.gradient(np.array([x - 1e-5, x, x + 1e-5]))
         angle = np.arctan(dy_dx[1])
-        return angle
+        return dy_dx[1]
 
     def lower_angle(x):
         dy_dx = np.gradient(lower_interp(np.array([x - 1e-5, x, x + 1e-5]))) / np.gradient(np.array([x - 1e-5, x, x + 1e-5]))
         angle = np.arctan(dy_dx[1])
-        return angle
+        return dy_dx[1]
 
     return upper_angle, lower_angle
 
@@ -97,6 +97,7 @@ def create_angle_functions(x_upper, y_upper, x_lower, y_lower):
 if __name__ == "__main__":
     filename = 'sd6060.dat'
     x_upper, y_upper, x_lower, y_lower = read_airfoil_data(filename)
+
 
     # Create functions to calculate angles
     upper_angle_func, lower_angle_func = calculate_surface_angles(x_upper, y_upper, x_lower, y_lower)

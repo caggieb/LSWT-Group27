@@ -45,7 +45,13 @@ def static_wake(alpha):
 
     pressure_static = filtered_df.loc[:, 'P098':'P109'].mean(axis=0)  # Average the readings if needed
 
-    return(pressure_static, x_positions_static)
+    return pressure_static, x_positions_static
+
+desired_alpha = 6
+
+pressure_static, x_positions_static = static_wake(desired_alpha)
+pressure_total, x_positions_total = total_wake(desired_alpha)
+
 
 # # Create the plot
 # plt.figure(figsize=(10, 6))
