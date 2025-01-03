@@ -46,8 +46,8 @@ def C_p_a(alpha):
     p_u = upper_taps(desired_alpha)
     p_l = lower_taps(desired_alpha)
 
-    c_p_u = (p_u + p_stat)/q_inf
-    c_p_l = (p_l + p_stat)/q_inf
+    c_p_u = (p_u - p_stat)/q_inf
+    c_p_l = (p_l - p_stat)/q_inf
 
     return c_p_u, c_p_l
 
@@ -106,7 +106,7 @@ def C_p_t_func(alpha):
     x_s_accurate = np.linspace(x_s[0], x_s[len(x_s)-1], 100)
 
     for i in range(0,len(x_s_accurate)):
-        c_p_t_list.append((p_t_func(x_s_accurate[i]) - p_s_func(x_s_accurate[i]))/q_inf)
+        c_p_t_list.append((p_t_func(x_s_accurate[i]) - p_stat)/q_inf)
 
     return c_p_t_list, x_s_accurate
 
@@ -136,7 +136,7 @@ for i in range(len(general['Alpha'])):
 
     aoa_rad = math.radians(general['Alpha'][i])
 
-    c_l = c_n*math.cos(aoa_rad)
+    c_l = c_n*(math.cos(aoa_rad) - (math.sin(aoa_rad)**2)/math.cos(aoa_rad))
     c_d = - c_a*math.cos(aoa_rad) + c_n*math.sin(aoa_rad)
 
     c_n_list.append(c_n)
@@ -168,59 +168,23 @@ for i in range(len(general['Alpha'])):
         sqrt_c_p_t_ac[i] = math.sqrt(c_p_t_ac[i])
 
 
-    c_d = -trapezoid(((sqrt_c_p_t)*(1-sqrt_c_p_t)), x_s)*2/132
+    c_d = -trapezoid(((sqrt_c_p_t)*(1-sqrt_c_p_t)), x_s)*2/160
 
-    c_d_ac = trapezoid(((sqrt_c_p_t_ac)*(1-sqrt_c_p_t_ac)), x_s_ac)*2/132
+    c_d_ac = trapezoid(((sqrt_c_p_t_ac)*(1-sqrt_c_p_t_ac)), x_s_ac-132/2-43.5)*2/160
 
     c_d_w_list.append(c_d)
 
     c_d_w_ac_list.append(c_d_ac)
-
-
-# for i in range(len(general['Alpha'])):
-
-#     p_u = upper_taps(general['Alpha'][i])
-#     p_l = lower_taps(general['Alpha'][i])
-    
-#     p_t_u = np.linspace(0,0, len(p_u))
-#     p_t_l = np.linspace(0,0, len(p_l))
-
-#     for i in range(0,len(p_u)):
-#         p_t_u[i] = p_u.iloc[i]*math.sin(upper_surface_angle(x_u.iloc[i]/(160/1000)))
-
-#     for i in range(0,len(p_l)):
-#         p_t_l[i] = p_l.iloc[i]*math.sin(lower_surface_angle(x_l.iloc[i]/(160/1000)))
-
-
-#     n_star = (trapezoid(p_l,x_l) - trapezoid(p_u,x_u))
-#     a_star = (trapezoid(p_t_u,x_u) - trapezoid(p_t_l,x_l))
-
-#     c_m_le = C_m_le(c_p_u, c_p_l)
-#     c_m_fourth = c_m_le + 0.25 * c_n
-
-#     aoa_rad = math.radians(general['Alpha'][i])
-
-#     l_star = n_star*math.cos(aoa_rad) - a_star*math.sin(aoa_rad)
-#     d_star = a_star*math.cos(aoa_rad) + n_star*math.sin(aoa_rad)
-
-
-
-#     c_n_list.append(c_n)
-#     c_a_list.append(c_a)
-#     c_m_le_list.append(c_m_le)
-#     c_m_fourth_list.append(c_m_fourth)
-#     c_l_list.append(c_l)
-#     c_d_list.append(c_d)
 
 desired_alpha = 8
 
 c_p_u = C_p_a(desired_alpha)[0]
 c_p_l = C_p_a(desired_alpha)[1]
 
-c_p_t, x_s = C_p_t(desired_alpha)
+c_p_t, x_s = C_p_t_func(desired_alpha)
 
-# plt.plot(x_s,c_p_t)
-# plt.show
+#plt.plot(x_s-43.5,c_p_t)
+plt.show
 
 # #Plotting Cp chordwise for a desired alpha
 # plt.plot(x_u, c_p_u, marker='o', label="Upper Surface")
@@ -238,13 +202,14 @@ c_p_t, x_s = C_p_t(desired_alpha)
 # Plotting Coeffs over alpha
 #plt.plot(general['Alpha'], c_n_list, label="C_n")
 #plt.plot(general['Alpha'], c_a_list, label="c_a")
-plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
-plt.plot(general['Alpha'], c_m_fourth_list, label="C_m_c/4")
+# plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
+# plt.plot(general['Alpha'], c_m_fourth_list, label="C_m_c/4")
 plt.plot(general['Alpha'], c_l_list, label="C_l")
 #plt.plot(general['Alpha'], c_d_list, label="C_d(fake)")
 plt.plot(general['Alpha'], c_d_w_ac_list, label="C_d(wake)")
+# plt.plot(c_d_w_ac_list, c_l_list, label="cl-cd)")
 plt.xlabel('alpha')
-plt.ylabel('coeff')
+plt.ylabel('coeffs')
 plt.legend()
 plt.grid(True)
 plt.show()
