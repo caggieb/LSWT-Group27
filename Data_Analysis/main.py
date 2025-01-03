@@ -32,6 +32,8 @@ c_l_list = []
 c_d_list = []
 c_d_w_list = []
 c_d_w_ac_list = []
+x_cp_c_list = []
+u_1_list = []
 
 
 def C_p_a(alpha):
@@ -103,12 +105,37 @@ def C_p_t_func(alpha):
     p_t_func = interp1d(x_t, p_t, kind='linear', fill_value="extrapolate")
     p_s_func = interp1d(x_s, p_s, kind='linear', fill_value="extrapolate")
 
-    x_s_accurate = np.linspace(x_s[0], x_s[len(x_s)-1], 100)
+    x_t_accurate = np.linspace(x_t[0], x_t[len(x_t)-1], 200)
 
-    for i in range(0,len(x_s_accurate)):
-        c_p_t_list.append((p_t_func(x_s_accurate[i]) - p_stat)/q_inf)
+    for i in range(0,len(x_t_accurate)):
+        c_p_t_list.append((p_t_func(x_t_accurate[i]) - p_stat)/q_inf)
 
-    return c_p_t_list, x_s_accurate
+    return c_p_t_list, x_t_accurate
+
+def U_1(alpha):
+
+    c_p_t_list = []
+
+    general_alpha = general[general['Alpha'] == alpha]
+
+    p_stat = general_alpha.iloc[0]['p_stat']
+    rho = general_alpha.iloc[0]['rho']
+    q_inf = general_alpha.iloc[0]['q_inf']
+
+    p_t = total_wake(alpha)[0]
+    p_s = static_wake(alpha)[0]
+
+    x_t = total_wake(alpha)[1]
+    x_s = static_wake(alpha)[1]
+
+    p_t_func = interp1d(x_t, p_t, kind='linear', fill_value="extrapolate")
+    p_s_func = interp1d(x_s, p_s, kind='linear', fill_value="extrapolate")
+
+
+    for i in range(0,len(x_t)):
+        u_1_list.append((2*(p_t_func(x_t[i]) - p_stat)/rho)**(1/2))
+
+    return u_1_list, x_t
 
 #Surface pressure data
 for i in range(len(general['Alpha'])):
@@ -139,12 +166,15 @@ for i in range(len(general['Alpha'])):
     c_l = c_n*(math.cos(aoa_rad) - (math.sin(aoa_rad)**2)/math.cos(aoa_rad))
     c_d = - c_a*math.cos(aoa_rad) + c_n*math.sin(aoa_rad)
 
+    x_cp_c = -c_m_le/c_n
+
     c_n_list.append(c_n)
     c_a_list.append(-c_a)
     c_m_le_list.append(c_m_le)
     c_m_fourth_list.append(c_m_fourth)
     c_l_list.append(c_l)
     c_d_list.append(c_d)
+    x_cp_c_list.append(x_cp_c*160)
 
 #Wake rake data
 for i in range(len(general['Alpha'])):
@@ -168,22 +198,29 @@ for i in range(len(general['Alpha'])):
         sqrt_c_p_t_ac[i] = math.sqrt(c_p_t_ac[i])
 
 
-    c_d = -trapezoid(((sqrt_c_p_t)*(1-sqrt_c_p_t)), x_s)*2/160
+    c_d = -trapezoid(((sqrt_c_p_t)*(1-sqrt_c_p_t)), x_s)*2/219
 
-    c_d_ac = trapezoid(((sqrt_c_p_t_ac)*(1-sqrt_c_p_t_ac)), x_s_ac-132/2-43.5)*2/160
+    c_d_ac = trapezoid(((sqrt_c_p_t_ac)*(1-sqrt_c_p_t_ac)), x_s_ac-132/2-43.5)*2/219
 
     c_d_w_list.append(c_d)
 
     c_d_w_ac_list.append(c_d_ac)
+
+for i in range(0, len(c_l_list)):
+
+    aoa_rad = math.radians(general['Alpha'][i])
+    
+    c_l_list[i] -= c_d_w_ac_list[i] * math.tan(aoa_rad)
+
 
 desired_alpha = 8
 
 c_p_u = C_p_a(desired_alpha)[0]
 c_p_l = C_p_a(desired_alpha)[1]
 
-c_p_t, x_s = C_p_t_func(desired_alpha)
+u_1, x_t = U_1(desired_alpha)
 
-#plt.plot(x_s-43.5,c_p_t)
+#plt.plot(x_t, u_1, marker='o', label="U1 Velocity Profile")
 plt.show
 
 # #Plotting Cp chordwise for a desired alpha
@@ -194,6 +231,7 @@ plt.show
 # plt.title(f'Pressure Coefficient Distribution for Angle of Attack = {desired_alpha}°')
 
 # plt.gca().invert_yaxis()  # Get the current axes and invert the y-axis
+# plt.grid(True)
 # plt.legend()
 # plt.show()
 
@@ -204,12 +242,13 @@ plt.show
 #plt.plot(general['Alpha'], c_a_list, label="c_a")
 # plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
 # plt.plot(general['Alpha'], c_m_fourth_list, label="C_m_c/4")
-plt.plot(general['Alpha'], c_l_list, label="C_l")
+plt.plot(general['Alpha'], c_l_list, marker='.', label="C_l", color='red')
 #plt.plot(general['Alpha'], c_d_list, label="C_d(fake)")
-plt.plot(general['Alpha'], c_d_w_ac_list, label="C_d(wake)")
+# plt.plot(general['Alpha'], c_d_w_ac_list, label="C_d(wake)")
 # plt.plot(c_d_w_ac_list, c_l_list, label="cl-cd)")
-plt.xlabel('alpha')
-plt.ylabel('coeffs')
+#plt.plot(general['Alpha'], x_cp_c_list, marker='o', label="x_cp")
+plt.xlabel('Alpha [degree]')
+plt.ylabel('Xcp, Center of Pressure [mm]')
 plt.legend()
 plt.grid(True)
 plt.show()
