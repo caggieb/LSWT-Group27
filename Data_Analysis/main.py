@@ -8,6 +8,7 @@ from scipy.interpolate import interp1d
 from  Wake_Readout import total_wake, static_wake
 from Airfoil_Readout import upper_taps, lower_taps, tap_coords
 from Airfoil_Geom import read_airfoil_data, create_angle_functions
+from quickwrite import quickwrite
 
 # Load airfoil data
 filename = 'sd6060.dat'
@@ -221,7 +222,6 @@ c_p_l = C_p_a(desired_alpha)[1]
 u_1, x_t = U_1(desired_alpha)
 
 #plt.plot(x_t, u_1, marker='o', label="U1 Velocity Profile")
-plt.show
 
 # #Plotting Cp chordwise for a desired alpha
 # plt.plot(x_u, c_p_u, marker='o', label="Upper Surface")
@@ -235,7 +235,7 @@ plt.show
 # plt.legend()
 # plt.show()
 
-
+quickwrite(general['Alpha'], c_l_list, "a.csv")
 
 # Plotting Coeffs over alpha
 #plt.plot(general['Alpha'], c_n_list, label="C_n")
