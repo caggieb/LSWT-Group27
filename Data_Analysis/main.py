@@ -21,8 +21,8 @@ upper_surface_angle, lower_surface_angle = create_angle_functions(x_airf_upper, 
 
 general = pd.read_csv('general_data.csv')
 
-x_u = tap_coords()[0]/100
-x_l = tap_coords()[1]/100
+x_u = tap_coords()[0]/1
+x_l = tap_coords()[1]/1
 
 c_n_list = []
 c_a_list = []
@@ -46,8 +46,8 @@ def C_p_a(alpha):
     p_u = upper_taps(desired_alpha)
     p_l = lower_taps(desired_alpha)
 
-    c_p_u = (p_u - p_stat)/q_inf
-    c_p_l = (p_l - p_stat)/q_inf
+    c_p_u = (p_u + p_stat)/q_inf
+    c_p_l = (p_l + p_stat)/q_inf
 
     return c_p_u, c_p_l
 
@@ -58,7 +58,7 @@ def C_m_le(c_p_u, c_p_l):
     for i in range(0, len(c_p_l)):
         c_p_l.iloc[i] = c_p_l.iloc[i]*x_l[i+25]
 
-    c_m_l = (trapezoid(c_p_u, x_u) - trapezoid(c_p_l, x_l))/0.160
+    c_m_l = (trapezoid(c_p_u, x_u) - trapezoid(c_p_l, x_l))/100**2
 
     return c_m_l
 
@@ -128,7 +128,7 @@ for i in range(len(general['Alpha'])):
         c_p_t_l[i] = c_p_l.iloc[i]*lower_surface_angle(x_l.iloc[i])
 
 
-    c_n = (trapezoid(c_p_l,x_l) - trapezoid(c_p_u,x_u))
+    c_n = (trapezoid(c_p_l,x_l) - trapezoid(c_p_u,x_u))/100 
     c_a = (trapezoid(c_p_t_u,x_u) - trapezoid(c_p_t_l,x_l))
 
     c_m_le = C_m_le(c_p_u, c_p_l)
@@ -136,7 +136,7 @@ for i in range(len(general['Alpha'])):
 
     aoa_rad = math.radians(general['Alpha'][i])
 
-    c_l = c_n*math.cos(aoa_rad) - c_a*math.sin(aoa_rad)
+    c_l = c_n*math.cos(aoa_rad)
     c_d = - c_a*math.cos(aoa_rad) + c_n*math.sin(aoa_rad)
 
     c_n_list.append(c_n)
@@ -168,9 +168,9 @@ for i in range(len(general['Alpha'])):
         sqrt_c_p_t_ac[i] = math.sqrt(c_p_t_ac[i])
 
 
-    c_d = -trapezoid(((sqrt_c_p_t)*(1-sqrt_c_p_t)), x_s)*2/160
+    c_d = -trapezoid(((sqrt_c_p_t)*(1-sqrt_c_p_t)), x_s)*2/132
 
-    c_d_ac = trapezoid(((sqrt_c_p_t_ac)*(1-sqrt_c_p_t_ac)), x_s_ac)*2/160
+    c_d_ac = trapezoid(((sqrt_c_p_t_ac)*(1-sqrt_c_p_t_ac)), x_s_ac)*2/132
 
     c_d_w_list.append(c_d)
 
@@ -238,9 +238,9 @@ c_p_t, x_s = C_p_t(desired_alpha)
 # Plotting Coeffs over alpha
 #plt.plot(general['Alpha'], c_n_list, label="C_n")
 #plt.plot(general['Alpha'], c_a_list, label="c_a")
-#plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
-#plt.plot(general['Alpha'], c_m_fourth_list, label="C_m_c/4")
-#plt.plot(general['Alpha'], c_l_list, label="C_l")
+plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
+plt.plot(general['Alpha'], c_m_fourth_list, label="C_m_c/4")
+plt.plot(general['Alpha'], c_l_list, label="C_l")
 #plt.plot(general['Alpha'], c_d_list, label="C_d(fake)")
 plt.plot(general['Alpha'], c_d_w_ac_list, label="C_d(wake)")
 plt.xlabel('alpha')
