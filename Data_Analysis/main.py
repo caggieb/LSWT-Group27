@@ -8,6 +8,7 @@ from scipy.interpolate import interp1d
 from  Wake_Readout import total_wake, static_wake
 from Airfoil_Readout import upper_taps, lower_taps, tap_coords
 from Airfoil_Geom import read_airfoil_data, create_angle_functions
+from quickwrite import quickwrite
 
 # Load airfoil data
 filename = 'sd6060.dat'
@@ -221,7 +222,6 @@ c_p_l = C_p_a(desired_alpha)[1]
 u_1, x_t = U_1(desired_alpha)
 
 #plt.plot(x_t, u_1, marker='o', label="U1 Velocity Profile")
-plt.show
 
 # #Plotting Cp chordwise for a desired alpha
 # plt.plot(x_u, c_p_u, marker='o', label="Upper Surface")
@@ -237,35 +237,28 @@ plt.show
 
 import csv
 
-for i in range(-1,3):
-    desired_alpha = i*5
+# Two separate lists (one for names and one for ages)
+aoa = c_d_w_ac_list
+coeff1 = c_l_list   
 
-    c_p_u = C_p_a(desired_alpha)[0]
-    c_p_l = C_p_a(desired_alpha)[1]
 
-    # Two separate lists (one for names and one for ages)
-    xu = x_u*1.6
-    coeff1 = c_p_u
-    xl = x_l*1.6
-    coeff2 = c_p_l
+        # Combine the two lists into rows (pairs of name and age)
+data = zip(aoa, coeff1)
 
-    # Combine the two lists into rows (pairs of name and age)
-    data = zip(xu, coeff1, xl, coeff2)
+        # Specify the name of the CSV file
+filename = f"cd-cl.csv"
 
-    # Specify the name of the CSV file
-    filename = f"c_p_{desired_alpha}_aoa.csv"
+        # Open the CSV file in write mode
+with open(filename, mode='w', newline='') as file:
+    writer = csv.writer(file)
+            
+            # Write the header (optional)
+    writer.writerow(["cd", "cl"])
+            
+            # Write each row (name, age) to the CSV file
+    writer.writerows(data)
 
-    # Open the CSV file in write mode
-    with open(filename, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        
-        # Write the header (optional)
-        writer.writerow(["x_u", "c_p_u", "x_l", "c_p_l"])
-        
-        # Write each row (name, age) to the CSV file
-        writer.writerows(data)
-
-    print(f"CSV file '{filename}' has been created.")
+print(f"CSV file '{filename}' has been created.")
 
 
 # Plotting Coeffs over alpha
