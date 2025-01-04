@@ -235,20 +235,51 @@ plt.show
 # plt.legend()
 # plt.show()
 
+import csv
+
+for i in range(-1,3):
+    desired_alpha = i*5
+
+    c_p_u = C_p_a(desired_alpha)[0]
+    c_p_l = C_p_a(desired_alpha)[1]
+
+    # Two separate lists (one for names and one for ages)
+    xu = x_u*1.6
+    coeff1 = c_p_u
+    xl = x_l*1.6
+    coeff2 = c_p_l
+
+    # Combine the two lists into rows (pairs of name and age)
+    data = zip(xu, coeff1, xl, coeff2)
+
+    # Specify the name of the CSV file
+    filename = f"c_p_{desired_alpha}_aoa.csv"
+
+    # Open the CSV file in write mode
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        
+        # Write the header (optional)
+        writer.writerow(["x_u", "c_p_u", "x_l", "c_p_l"])
+        
+        # Write each row (name, age) to the CSV file
+        writer.writerows(data)
+
+    print(f"CSV file '{filename}' has been created.")
 
 
 # Plotting Coeffs over alpha
 #plt.plot(general['Alpha'], c_n_list, label="C_n")
 #plt.plot(general['Alpha'], c_a_list, label="c_a")
 # plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
-# plt.plot(general['Alpha'], c_m_fourth_list, label="C_m_c/4")
-plt.plot(general['Alpha'], c_l_list, marker='.', label="C_l", color='red')
+# plt.plot(general['Alpha'], c_m_fourth_list, marker='.', label="C_m_c/4", color='black')
+#plt.plot(general['Alpha'], c_l_list, marker='.', label="C_l", color='red')
 #plt.plot(general['Alpha'], c_d_list, label="C_d(fake)")
-# plt.plot(general['Alpha'], c_d_w_ac_list, label="C_d(wake)")
-# plt.plot(c_d_w_ac_list, c_l_list, label="cl-cd)")
+# plt.plot(general['Alpha'], c_d_w_ac_list, marker='.', label="C_d", color='orange')
+plt.plot(c_d_w_ac_list, c_l_list,marker='.', label="Cl-Cd)", color='orange')
 #plt.plot(general['Alpha'], x_cp_c_list, marker='o', label="x_cp")
-plt.xlabel('Alpha [degree]')
-plt.ylabel('Xcp, Center of Pressure [mm]')
+plt.ylabel('C_l, Coefficient of lift [-]')
+plt.xlabel('C_d, Coefficient of lift[-]')
 plt.legend()
 plt.grid(True)
-plt.show()
+#plt.show()
