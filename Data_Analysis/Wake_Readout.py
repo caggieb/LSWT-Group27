@@ -26,6 +26,7 @@ def total_wake(alpha):
     
     return pressure_total, x_positions_total
 
+
 def static_wake(alpha):
     # Load the CSV data
     total_coordinates_df = pd.read_csv('SLT_total_rake_coords.csv', skiprows=1)

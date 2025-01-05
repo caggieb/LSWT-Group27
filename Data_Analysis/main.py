@@ -35,7 +35,7 @@ c_d_w_list = []
 c_d_w_ac_list = []
 x_cp_c_list = []
 u_1_list = []
-
+d_list = []
 
 def C_p_a(alpha):
 
@@ -126,17 +126,21 @@ def U_1(alpha):
     p_t = total_wake(alpha)[0]
     p_s = static_wake(alpha)[0]
 
-    x_t = total_wake(alpha)[1]
+    x_t = total_wake(alpha)[1].to_list()
     x_s = static_wake(alpha)[1]
+
+
+
 
     p_t_func = interp1d(x_t, p_t, kind='linear', fill_value="extrapolate")
     p_s_func = interp1d(x_s, p_s, kind='linear', fill_value="extrapolate")
 
+    
 
     for i in range(0,len(x_t)):
         u_1_list.append((2*(p_t_func(x_t[i]) - p_stat)/rho)**(1/2))
 
-    return u_1_list, x_t
+    return u_1_list, x_t, p_t
 
 #Surface pressure data
 for i in range(len(general['Alpha'])):
@@ -213,15 +217,47 @@ for i in range(0, len(c_l_list)):
     
     c_l_list[i] -= c_d_w_ac_list[i] * math.tan(aoa_rad)
 
-
 desired_alpha = 8
 
 c_p_u = C_p_a(desired_alpha)[0]
 c_p_l = C_p_a(desired_alpha)[1]
 
-u_1, x_t = U_1(desired_alpha)
+u_1, x_t,asd = U_1(desired_alpha)
 
-#plt.plot(x_t, u_1, marker='o', label="U1 Velocity Profile")
+#lt.plot(x_t, u_1, marker='o', label="U1 Velocity Profile")
+#plt.show()
+
+u_1_list = []
+
+
+for i in range(len(general['Alpha'])):
+    u_1_list = []
+
+    u_1, x_t, p_t = U_1(general['Alpha'][i])
+
+    general_alpha = general[general['Alpha'] == general['Alpha'][i]]
+    p_stat = general_alpha.iloc[0]['p_stat']
+    rho = general_alpha.iloc[0]['rho']
+    q_inf = general_alpha.iloc[0]['q_inf']
+
+    u_inf = (2*q_inf/rho)**(1/2)
+
+    u_int = []
+    p_sum = []
+
+    for i in range(len(u_1)):
+        u_int.append((u_inf - u_1[i]) * u_1[i])
+
+    for i in range(len(p_t)):
+        p_sum.append(p_t.iloc[i])
+
+    d = rho * trapezoid(u_int,x_t) # trapezoid(p_sum, x_t)
+
+    d_list.append(d/(219*280))
+
+
+
+
 
 # #Plotting Cp chordwise for a desired alpha
 # plt.plot(x_u, c_p_u, marker='o', label="Upper Surface")
@@ -235,30 +271,30 @@ u_1, x_t = U_1(desired_alpha)
 # plt.legend()
 # plt.show()
 
-import csv
+# import csv
 
-# Two separate lists (one for names and one for ages)
-aoa = c_d_w_ac_list
-coeff1 = c_l_list   
+# # Two separate lists (one for names and one for ages)
+# aoa = c_d_w_ac_list
+# coeff1 = c_l_list   
 
 
-        # Combine the two lists into rows (pairs of name and age)
-data = zip(aoa, coeff1)
+#         # Combine the two lists into rows (pairs of name and age)
+# data = zip(aoa, coeff1)
 
-        # Specify the name of the CSV file
-filename = f"cd-cl.csv"
+#         # Specify the name of the CSV file
+# filename = f"cd-cl.csv"
 
-        # Open the CSV file in write mode
-with open(filename, mode='w', newline='') as file:
-    writer = csv.writer(file)
+#         # Open the CSV file in write mode
+# with open(filename, mode='w', newline='') as file:
+#     writer = csv.writer(file)
             
-            # Write the header (optional)
-    writer.writerow(["cd", "cl"])
+#             # Write the header (optional)
+#     writer.writerow(["cd", "cl"])
             
-            # Write each row (name, age) to the CSV file
-    writer.writerows(data)
+#             # Write each row (name, age) to the CSV file
+#     writer.writerows(data)
 
-print(f"CSV file '{filename}' has been created.")
+# print(f"CSV file '{filename}' has been created.")
 
 
 # Plotting Coeffs over alpha
@@ -269,10 +305,11 @@ print(f"CSV file '{filename}' has been created.")
 #plt.plot(general['Alpha'], c_l_list, marker='.', label="C_l", color='red')
 #plt.plot(general['Alpha'], c_d_list, label="C_d(fake)")
 # plt.plot(general['Alpha'], c_d_w_ac_list, marker='.', label="C_d", color='orange')
-plt.plot(c_d_w_ac_list, c_l_list,marker='.', label="Cl-Cd)", color='orange')
+#plt.plot(c_d_w_ac_list, c_l_list,marker='.', label="Cl-Cd)", color='orange')
 #plt.plot(general['Alpha'], x_cp_c_list, marker='o', label="x_cp")
+plt.plot(general['Alpha'], d_list, label='drag-velo')
 plt.ylabel('C_l, Coefficient of lift [-]')
 plt.xlabel('C_d, Coefficient of lift[-]')
 plt.legend()
 plt.grid(True)
-#plt.show()
+plt.show()
