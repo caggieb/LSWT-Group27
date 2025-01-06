@@ -54,7 +54,7 @@ pressure_static, x_positions_static = static_wake(desired_alpha)
 pressure_total, x_positions_total = total_wake(desired_alpha)
 
 
-# # Create the plot
+# Create the plot
 # plt.figure(figsize=(10, 6))
 # plt.plot(x_positions_total, pressure_total, marker='o', label="Total Rake Pressure")
 # plt.plot(x_positions_static, pressure_static, marker='o', label="Static Rake Pressure")
@@ -63,4 +63,4 @@ pressure_total, x_positions_total = total_wake(desired_alpha)
 # plt.ylabel('Pressure (Pa)')
 # plt.grid(True)
 # plt.legend()
-# plt.show()
+#plt.show()

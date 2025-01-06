@@ -7,12 +7,15 @@ from scipy.interpolate import interp1d
 
 from  Wake_Readout import total_wake, static_wake
 from Airfoil_Readout import upper_taps, lower_taps, tap_coords
-from Airfoil_Geom import read_airfoil_data, create_angle_functions
+from Airfoil_Geom import read_airfoil_data, create_angle_functions, create_surface_functions
 from quickwrite import quickwrite
 
 # Load airfoil data
 filename = 'sd6060.dat'
 x_airf_upper, y_airf_upper, x_airf_lower, y_airf_lower = read_airfoil_data(filename)
+
+y_u_func = create_surface_functions(x_airf_upper, y_airf_upper, x_airf_lower, y_airf_lower)[0]
+y_l_func = create_surface_functions(x_airf_upper, y_airf_upper, x_airf_lower, y_airf_lower)[1]
 
 # Create angle functions
 upper_surface_angle, lower_surface_angle = create_angle_functions(x_airf_upper, y_airf_upper, x_airf_lower, y_airf_lower)
@@ -22,8 +25,9 @@ upper_surface_angle, lower_surface_angle = create_angle_functions(x_airf_upper, 
 
 general = pd.read_csv('general_data.csv')
 
-x_u = tap_coords()[0]/1
-x_l = tap_coords()[1]/1
+x_u = tap_coords()[0]/100
+x_l = tap_coords()[1]/100
+
 
 c_n_list = []
 c_a_list = []
@@ -61,7 +65,7 @@ def C_m_le(c_p_u, c_p_l):
     for i in range(0, len(c_p_l)):
         c_p_l.iloc[i] = c_p_l.iloc[i]*x_l[i+25]
 
-    c_m_l = (trapezoid(c_p_u, x_u) - trapezoid(c_p_l, x_l))/100**2
+    c_m_l = (trapezoid(c_p_u, x_u) - trapezoid(c_p_l, x_l))
 
     return c_m_l
 
@@ -148,28 +152,29 @@ for i in range(len(general['Alpha'])):
     c_p_u = C_p_a(general['Alpha'][i])[0]
     c_p_l = C_p_a(general['Alpha'][i])[1]
     
+    y_u = []
+    y_l = []
 
-    c_p_t_u = np.linspace(0,0, len(c_p_u))
-    c_p_t_l = np.linspace(0,0, len(c_p_l))
+    for i in range(0,len(x_u)):
+        y_u.append(y_u_func(x_u.iloc[i]))
+    
+    for i in range(0, len(x_l)):
+        y_l.append(y_l_func(x_l.iloc[i]))
 
-    for i in range(0,len(c_p_u)):
-        #print(x_u.iloc[i])
-        c_p_t_u[i] = c_p_u.iloc[i]*upper_surface_angle(x_u.iloc[i])
+    c_n = (trapezoid(c_p_l,x_l) - trapezoid(c_p_u,x_u))
+    c_a = (trapezoid(c_p_u,y_u) - trapezoid(c_p_l,y_l))
 
-    for i in range(0,len(c_p_l)):
-        c_p_t_l[i] = c_p_l.iloc[i]*lower_surface_angle(x_l.iloc[i])
-
-
-    c_n = (trapezoid(c_p_l,x_l) - trapezoid(c_p_u,x_u))/100 
-    c_a = (trapezoid(c_p_t_u,x_u) - trapezoid(c_p_t_l,x_l))
+    #print(y_u, y_l)
 
     c_m_le = C_m_le(c_p_u, c_p_l)
     c_m_fourth = c_m_le + 0.25 * c_n
 
+    print(c_a)
+
     aoa_rad = math.radians(general['Alpha'][i])
 
-    c_l = c_n*(math.cos(aoa_rad) - (math.sin(aoa_rad)**2)/math.cos(aoa_rad))
-    c_d = - c_a*math.cos(aoa_rad) + c_n*math.sin(aoa_rad)
+    c_l = c_n*(math.cos(aoa_rad) - c_a*math.sin(aoa_rad))
+    c_d =  (-c_a*math.cos(aoa_rad) + c_n*math.sin(aoa_rad))
 
     x_cp_c = -c_m_le/c_n
 
@@ -211,11 +216,7 @@ for i in range(len(general['Alpha'])):
 
     c_d_w_ac_list.append(c_d_ac)
 
-for i in range(0, len(c_l_list)):
 
-    aoa_rad = math.radians(general['Alpha'][i])
-    
-    c_l_list[i] -= c_d_w_ac_list[i] * math.tan(aoa_rad)
 
 desired_alpha = 8
 
@@ -253,7 +254,7 @@ for i in range(len(general['Alpha'])):
 
     d = rho * trapezoid(u_int,x_t) # trapezoid(p_sum, x_t)
 
-    d_list.append(d/(219*280))
+    d_list.append(d/(160*280))
 
 
 
@@ -302,12 +303,12 @@ for i in range(len(general['Alpha'])):
 #plt.plot(general['Alpha'], c_a_list, label="c_a")
 # plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
 # plt.plot(general['Alpha'], c_m_fourth_list, marker='.', label="C_m_c/4", color='black')
-#plt.plot(general['Alpha'], c_l_list, marker='.', label="C_l", color='red')
-#plt.plot(general['Alpha'], c_d_list, label="C_d(fake)")
-# plt.plot(general['Alpha'], c_d_w_ac_list, marker='.', label="C_d", color='orange')
+plt.plot(general['Alpha'], c_l_list, marker='.', label="C_l", color='red')
+plt.plot(general['Alpha'], c_d_list, label="C_d(fake)")
+#plt.plot(general['Alpha'], c_d_w_ac_list, marker='.', label="C_d", color='orange')
 #plt.plot(c_d_w_ac_list, c_l_list,marker='.', label="Cl-Cd)", color='orange')
 #plt.plot(general['Alpha'], x_cp_c_list, marker='o', label="x_cp")
-plt.plot(general['Alpha'], d_list, label='drag-velo')
+#plt.plot(d_list,c_l_list, label='C_d-C_l-alternative', marker='^')
 plt.ylabel('C_l, Coefficient of lift [-]')
 plt.xlabel('C_d, Coefficient of lift[-]')
 plt.legend()
