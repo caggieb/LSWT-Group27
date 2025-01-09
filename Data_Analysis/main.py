@@ -231,30 +231,30 @@ u_1, x_t,asd = U_1(desired_alpha)
 u_1_list = []
 
 
-for i in range(len(general['Alpha'])):
-    u_1_list = []
+# for i in range(len(general['Alpha'])):
+#     u_1_list = []
 
-    u_1, x_t, p_t = U_1(general['Alpha'][i])
+#     u_1, x_t, p_t = U_1(general['Alpha'][i])
 
-    general_alpha = general[general['Alpha'] == general['Alpha'][i]]
-    p_stat = general_alpha.iloc[0]['p_stat']
-    rho = general_alpha.iloc[0]['rho']
-    q_inf = general_alpha.iloc[0]['q_inf']
+#     general_alpha = general[general['Alpha'] == general['Alpha'][i]]
+#     p_stat = general_alpha.iloc[0]['p_stat']
+#     rho = general_alpha.iloc[0]['rho']
+#     q_inf = general_alpha.iloc[0]['q_inf']
 
-    u_inf = (2*q_inf/rho)**(1/2)
+#     u_inf = (2*q_inf/rho)**(1/2)
 
-    u_int = []
-    p_sum = []
+#     u_int = []
+#     p_sum = []
 
-    for i in range(len(u_1)):
-        u_int.append((u_inf - u_1[i]) * u_1[i])
+#     for i in range(len(u_1)):
+#         u_int.append((u_inf - u_1[i]) * u_1[i])
 
-    for i in range(len(p_t)):
-        p_sum.append(p_t.iloc[i])
+#     for i in range(len(p_t)):
+#         p_sum.append(p_t.iloc[i])
 
-    d = rho * trapezoid(u_int,x_t) # trapezoid(p_sum, x_t)
+#     d = rho * trapezoid(u_int,x_t) # trapezoid(p_sum, x_t)
 
-    d_list.append(d/(160*280))
+#     d_list.append(d/(160*280))
 
 
 
@@ -302,15 +302,15 @@ for i in range(len(general['Alpha'])):
 #plt.plot(general['Alpha'], c_n_list, label="C_n")
 #plt.plot(general['Alpha'], c_a_list, label="c_a")
 # plt.plot(general['Alpha'], c_m_le_list, label="C_m_le")
-# plt.plot(general['Alpha'], c_m_fourth_list, marker='.', label="C_m_c/4", color='black')
-#plt.plot(general['Alpha'], c_l_list, marker='.', label="C_l", color='red')
-#plt.plot(c_d_list, c_l_list, label="C_l-C_d(surface_data)", marker='.', color='blue')
+#plt.plot(general['Alpha'], c_m_fourth_list, marker='.', label=r"$c_{m_{c/4}}$", color='black')
+# plt.plot(general['Alpha'], c_l_list, marker='.', label=r"$c_l$", color='red')
+plt.plot(c_d_list, c_l_list, label=r"$c_l$-$c_d$(surface_data)", marker='.', color='blue')
 #plt.plot(general['Alpha'], c_d_w_ac_list, marker='.', label="C_d", color='orange')
-plt.plot(c_d_w_ac_list, c_l_list,marker='.', label="Cl-Cd(wake-data)", color='orange')
-#plt.plot(general['Alpha'], x_cp_c_list, marker='o', label="x_cp")
+#plt.plot(c_d_w_ac_list, c_l_list,marker='.', label=r"$c_l$-$c_d$(wake-data)", color='orange')
+#plt.plot(general['Alpha'], x_cp_c_list, marker='o', label=r"$x_{cp}$")
 #plt.plot(d_list,c_l_list, label='C_d-C_l(alternative', marker='^')
-plt.ylabel('C_l, Coefficient of lift [-]')
-plt.xlabel('C_d, Coefficient of lift[-]')
+plt.ylabel(r'$c_{l}$, Coefficient of lift [-]')
+plt.xlabel(r'$c_d$, Coefficient of drag [-]')
 plt.legend()
 plt.grid(True)
 plt.show()
